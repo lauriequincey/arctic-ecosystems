@@ -36,5 +36,5 @@ function maskViirs(image) {
 
 
 viirs = viirs.map(maskViirs).filterBounds(fluxFootprint).filterDate("2020-05-01", "2020-07-01")
-
+print(viirs.limit(1))
 Map.addLayer(viirs)

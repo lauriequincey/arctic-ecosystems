@@ -225,15 +225,15 @@ function maskLandsat(image) {
     var bitmaskCombined = qa.bitwiseAnd(bitmaskCloudDilated).eq(0)
       .and(qa.bitwiseAnd(bitmaskcloudCirrus).eq(0))
       .and(qa.bitwiseAnd(bitmaskCloud).eq(0))
-      .and(qa.bitwiseAnd(bitmaskCloudShadow).eq(0))
-      .and(qa.bitwiseAnd(bitmaskSnow).eq(0));
+      //.and(qa.bitwiseAnd(bitmaskCloudShadow).eq(0))
+      //.and(qa.bitwiseAnd(bitmaskSnow).eq(0));
     
     // Apply combined mask to image
     return image.updateMask(bitmaskCombined);
   }
 function maskSentinel2(image) {
   image = image.updateMask(image.select("cs").gte(0.50)); // The threshold for masking; values between 0.50 and 0.65 generally work well. Higher values will remove thin clouds, haze & cirrus shadows.
-  image = image.updateMask(image.select("SCL").eq(11).not()); // SCL (predone scene classification) band value for snow, and invert
+  //image = image.updateMask(image.select("SCL").eq(11).not()); // SCL (predone scene classification) band value for snow, and invert
   return image;
 }
 function maskAster(image) {
@@ -266,7 +266,7 @@ function maskAster(image) {
     {"Green": image.select("Green"),
      "NIR":  image.select("NIR")});
   
-  return image.updateMask(cloudMask.and(terribleSnowIndex.lt(0.4)));
+  return image.updateMask(cloudMask)//.and(terribleSnowIndex.lt(0.4)));
 }
 function maskModis(image) {
   
@@ -284,12 +284,12 @@ function maskModis(image) {
      "NIR":  image.select("NIR")});
   
   var bitmaskCombined = qa.bitwiseAnd(bitmaskCloud).eq(0)
-    .and(qa.bitwiseAnd(bitmaskCloudShadow).eq(0))
+    //.and(qa.bitwiseAnd(bitmaskCloudShadow).eq(0))
     .and(qa.bitwiseAnd(bitmaskCloudCirrus).eq(0))
     //.and(qa.bitwiseAnd(bitmaskCloudAdjacent).eq(0)) // too aggresive.
-    .and(qa.bitwiseAnd(bitmaskSnowMOD35).eq(0))
-    .and(qa.bitwiseAnd(bitmaskSnowInternal).eq(0))
-    .and(terribleSnowIndex.lt(-0.2));
+    //.and(qa.bitwiseAnd(bitmaskSnowMOD35).eq(0))
+    //.and(qa.bitwiseAnd(bitmaskSnowInternal).eq(0))
+    //.and(terribleSnowIndex.lt(-0.2));
   
   return image.updateMask(bitmaskCombined);
 }
@@ -308,7 +308,7 @@ function maskAvhrr(image) {
   var bitmaskCombined = qa.bitwiseAnd(bitmaskCloud).eq(0)
     //.and(qa.bitwiseAnd(bitmaskCloudShadow).eq(0))
     //.and(qa.bitwiseAnd(bitmaskCloudNight).eq(0))
-    .and(terribleSnowIndex.lt(-0.2));
+    //.and(terribleSnowIndex.lt(-0.2));
   
   return image.updateMask(bitmaskCombined);
 }
@@ -323,7 +323,7 @@ function maskViirs(image) {
        "NIR":  image.select("NIR")});
   
   var bitmaskCombined = qa.bitwiseAnd(bitmaskCloud).eq(0)
-    .and(terribleSnowIndex.lt(-0.2));
+    //.and(terribleSnowIndex.lt(-0.2));
   
   return image.updateMask(bitmaskCombined);
 }
