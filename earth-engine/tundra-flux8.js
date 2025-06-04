@@ -3,7 +3,11 @@
 //var fluxCoords = ee.Geometry.Point([19.04520892, 68.35594288]); // abisko palsa bog
 //var fluxCoords = ee.Geometry.Point([24.24301, 67.98721]); // kentarrova
 //var fluxCoords = ee.Geometry.Point([26.63859, 67.36239]); // sodankyla
-var fluxCoords = ee.Geometry.Point([29.61, 67.7549]); // varrio
+//var fluxCoords = ee.Geometry.Point([29.61, 67.7549]); // varrio
+//var fluxCoords = ee.Geometry.Point([-53.51413, 69.25349]); // disko
+//var fluxCoords = ee.Geometry.Point([-20.550869, 74.4733]); // zackenberg gras
+//var fluxCoords = ee.Geometry.Point([-20.555773, 74.48152]); // zackenberg fen
+var fluxCoords = ee.Geometry.Point([-51.386066, 64.130936]); // nuuk fen
 var fluxBuffer = 200;
 
 var bands = ["blue", "green", "red", "nir", "swir_1", "swir_2"];
@@ -564,9 +568,9 @@ print("If it gets here and the properties look right, it has worked", features.f
 /** Export **/
 Export.table.toDrive({
   collection: features,
-  description: "Pixel_Aggregation_varrio",
+  description: "Pixel_Aggregation_nuuk-fen",
   folder: "satellite_pixels",
-  fileNamePrefix: "tundra-flux_varrio_glcm",
+  fileNamePrefix: "tundra-flux_nuuk-fen_glcm",
   fileFormat: "CSV",
   //selectors: bands.concat(["platform_id", "solar_elevation", "solar_azimuth", "unixtime"])
 });
