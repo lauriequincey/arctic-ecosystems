@@ -1,5 +1,5 @@
 /** User Inputs **/
-//var fluxCoords = ee.Geometry.Point([19.050333, 68.35415]); // abisko grassland
+var fluxCoords = ee.Geometry.Point([19.050333, 68.35415]); // abisko grassland
 //var fluxCoords = ee.Geometry.Point([19.04520892, 68.35594288]); // abisko palsa bog
 //var fluxCoords = ee.Geometry.Point([24.24301, 67.98721]); // kentarrova
 //var fluxCoords = ee.Geometry.Point([26.63859, 67.36239]); // sodankyla
@@ -7,9 +7,8 @@
 //var fluxCoords = ee.Geometry.Point([-53.51413, 69.25349]); // disko
 //var fluxCoords = ee.Geometry.Point([-20.550869, 74.4733]); // zackenberg gras
 //var fluxCoords = ee.Geometry.Point([-20.555773, 74.48152]); // zackenberg fen
-var fluxCoords = ee.Geometry.Point([-51.386066, 64.130936]); // nuuk fen
+//var fluxCoords = ee.Geometry.Point([-51.386066, 64.130936]); // nuuk fen
 var fluxBuffer = 200;
-
 var bands = ["blue", "green", "red", "nir", "swir_1", "swir_2"];
 
 /** Data **/
@@ -240,7 +239,7 @@ function maskLandsat(image) {
     return image.updateMask(bitmaskCombined);
   }
 function maskSentinel2(image) {
-  image = image.updateMask(image.select("cs").gte(0.50)); // The threshold for masking; values between 0.50 and 0.65 generally work well. Higher values will remove thin clouds, haze & cirrus shadows.
+  image = image.updateMask(image.select("cs").gte(0.50)); // The threshold for masking values between 0.50 and 0.65 generally work well. Higher values will remove thin clouds, haze & cirrus shadows.
   //image = image.updateMask(image.select("scl").eq(11).not()); // SCL (predone scene classification) band value for snow, and invert
   return image;
 }
@@ -268,13 +267,8 @@ function maskAster(image) {
     })
     .not()
     .rename("cloudMask");
-    
-  var terribleSnowIndex = image.expression( // based off nsdi but exploiting high red, low NIR reflectance properties of snow. Helps deal with messy cloud/snow/mountain pixels which the bitmasks don"t catch.
-    "(Green - NIR) / (Green + NIR)",
-    {"green": image.select("green"),
-     "nir":  image.select("nir")});
   
-  return image.updateMask(cloudMask)//.and(terribleSnowIndex.lt(0.4)));
+  return image.updateMask(cloudMask);
 }
 function maskModis(image) {
   
@@ -308,30 +302,20 @@ function maskAvhrr(image) {
   var bitmaskCloud = 1 << 1;
   var bitmaskCloudShadow = 1 << 2;
   var bitmaskCloudNight = 1 << 6; // No nightime!
-  var terribleSnowIndex = image.expression( // based off nsdi but exploiting high red low NIR reflectance properties of snow. Helps deal with messy cloud/snow/mountain pixels which the bitmasks don"t catch.
-    "(Red - NIR) / (Red + NIR)",
-    {"red": image.select("red"),
-     "nir":  image.select("nir")});
   
   var bitmaskCombined = qa.bitwiseAnd(bitmaskCloud).eq(0)
     //.and(qa.bitwiseAnd(bitmaskCloudShadow).eq(0))
     //.and(qa.bitwiseAnd(bitmaskCloudNight).eq(0))
-    //.and(terribleSnowIndex.lt(-0.2));
   
   return image.updateMask(bitmaskCombined);
 }
 function maskViirs(image) {
   
-  var qa = image.select("qa_pixel")//.toInt();
+  var qa = image.select("qa_pixel");
   
   var bitmaskCloud = 1 << 3;
-  var terribleSnowIndex = image.expression( // based off nsdi but exploiting high red, low NIR reflectance properties of snow. Helps deal with messy cloud/snow/mountain pixels which the bitmasks don"t catch.
-      "(Red - NIR) / (Red + NIR)",
-      {"red": image.select("red"),
-       "nir":  image.select("nir")});
   
-  var bitmaskCombined = qa.bitwiseAnd(bitmaskCloud).eq(0)
-    //.and(terribleSnowIndex.lt(-0.2));
+  var bitmaskCombined = qa.bitwiseAnd(bitmaskCloud).eq(0);
   
   return image.updateMask(bitmaskCombined);
 }
@@ -463,52 +447,7 @@ function scaleRadiance(featureCollection) {
   
 }
 
-/** Run Method 2 **/
-//var imageCollectionsList = ee.List([
-//  landsat
-//    .map(setPixResProp(30))
-//    .map(maskLandsat),
-//    
-//  sentinel2
-//    .map(setPixResProp(10))
-//    .map(maskSentinel2)
-//    .map(setSunElevSentinel2),
-//    
-//  aster
-//    .map(setPixResProp(15))
-//    .map(maskAster)
-//    .map(setSunElevAster),
-//    
-//  setSunElevModisViirs(modisA1)
-//    .map(setPixResProp(500))
-//    .map(maskModis),
-//    
-//  setSunElevAvhrr(avhrr)
-//   .map(setPixResProp(1000))
-//   .map(maskAvhrr),
-//   
-//  setSunElevModisViirs(viirs)
-//    .map(setPixResProp(1000))
-//    .map(maskViirs)
-//  ]);
-//
-//var imageryFlat = ee.ImageCollection(imageCollectionsList.iterate(function(collection, previous) {
-//  return ee.ImageCollection(previous).merge(ee.ImageCollection(collection));
-//}, ee.ImageCollection([]))) // Start with an empty ImageCollection
-//  .filterBounds(fluxFootprint)
-//  //.filterDate("1999-01-01", "2000-01-01")
-//  .map(function(image) {return ee.Image(image).select(bands)});
-//  
-//// Convert to Feature Collection and apply functions
-//var features = imageryFlat
-//  .map(toFeature)
-//  .filter(ee.Filter.notNull(["red", "nir", "swir_1"]));
-//
-//features = scaleRadiance(features);
-//
-//print("No. Images/Data Points", features.size());
-
-/** Run Method 1 **/
+/** Run **/
 // Apply functions specific to each image collection
 var imagerySeparate = ee.List([
   landsat
@@ -540,20 +479,12 @@ var imagerySeparate = ee.List([
   //  .map(setPixResProp(1000)) // product sheet says 5566m but this doesn't work. AVHRR should be 1000m, using this value works...
   //  .map(maskViirs)
   ]);
-//print(ee.ImageCollection(imagerySeparate.get(0)).first())
-
-//var selectedBands = bands.filter(ee.Filter.or.apply(null, bands.map(function(base) {
-//  return ee.Filter.stringStartsWith('item', base);
-//})));
 
 // Apply functions to all image collections
 var imageryFlat = ee.ImageCollection(ee.FeatureCollection(imagerySeparate).flatten())
   .filterBounds(fluxFootprint)
   //.filterDate("2020-07-01", "2020-08-01") // TESTING ONLY
-  .map(function(image) {return ee.Image(image)});//.select('blue.*|green.*|red.*')});//bands)});
-
-//print(imageryFlat.first())
-//print(imageryFlat.size())
+  .map(function(image) {return ee.Image(image)});
 
 // Convert to Feature Collection and apply functions
 var features = imageryFlat
@@ -563,7 +494,6 @@ var features = imageryFlat
 features = scaleRadiance(features);
 
 print("If it gets here and the properties look right, it has worked", features.first());
-//print("No. Images/Data Points", features.size());
 
 /** Export **/
 Export.table.toDrive({
